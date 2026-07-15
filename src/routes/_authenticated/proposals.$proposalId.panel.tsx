@@ -117,7 +117,10 @@ function ProposalPanel() {
             <p className="text-sm text-muted-foreground mb-4">Confirm all details before sending to client.</p>
             <button 
               disabled={proposal.status !== 'in_review' && proposal.status !== 'draft'}
-              onClick={() => handleAction(() => verifyProposal({ data: { proposalId: proposal.id, userId: (supabase.auth.getUser() as any).id ?? "mock" } }))}
+              onClick={async () => {
+                const { data } = await supabase.auth.getUser();
+                return handleAction(() => verifyProposal({ data: { proposalId: proposal.id, userId: data.user?.id ?? "mock" } }));
+              }}
               className="w-full bg-primary text-white py-2 rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
             >
               Verify Proposal
@@ -132,7 +135,10 @@ function ProposalPanel() {
             <p className="text-sm text-muted-foreground mb-4">Dispatches Email and WhatsApp immediately, and schedules reminders.</p>
             <button 
               disabled={proposal.status !== 'verified'}
-              onClick={() => handleAction(() => sendProposal({ data: { proposalId: proposal.id, userId: (supabase.auth.getUser() as any).id ?? "mock" } }))}
+              onClick={async () => {
+                const { data } = await supabase.auth.getUser();
+                return handleAction(() => sendProposal({ data: { proposalId: proposal.id, userId: data.user?.id ?? "mock" } }));
+              }}
               className="w-full bg-primary text-white py-2 rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
             >
               Send Proposal (Email + WA)
