@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_trails: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          new_status: string | null
+          old_status: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       brand_settings: {
         Row: {
           settings: Json
@@ -44,6 +77,8 @@ export type Database = {
           phone: string | null
           updated_at: string
           user_id: string
+          whatsapp_consent: boolean | null
+          whatsapp_number: string | null
         }
         Insert: {
           address?: string | null
@@ -56,6 +91,8 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_consent?: boolean | null
+          whatsapp_number?: string | null
         }
         Update: {
           address?: string | null
@@ -68,11 +105,14 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp_consent?: boolean | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }
       invoices: {
         Row: {
+          authorized_by: string | null
           client_address: string | null
           client_email: string | null
           client_name: string | null
@@ -83,13 +123,16 @@ export type Database = {
           items: Json
           notes: string | null
           number: string
+          proposal_id: string | null
           status: string
+          template_id: string | null
           terms: string | null
           total: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          authorized_by?: string | null
           client_address?: string | null
           client_email?: string | null
           client_name?: string | null
@@ -100,13 +143,16 @@ export type Database = {
           items?: Json
           notes?: string | null
           number: string
+          proposal_id?: string | null
           status?: string
+          template_id?: string | null
           terms?: string | null
           total?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          authorized_by?: string | null
           client_address?: string | null
           client_email?: string | null
           client_name?: string | null
@@ -117,9 +163,50 @@ export type Database = {
           items?: Json
           notes?: string | null
           number?: string
+          proposal_id?: string | null
           status?: string
+          template_id?: string | null
           terms?: string | null
           total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      message_logs: {
+        Row: {
+          channel: string
+          created_at: string
+          direction: string
+          entity_id: string
+          entity_type: string
+          id: string
+          provider_message_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          direction: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          provider_message_id?: string | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          direction?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          provider_message_id?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
         }
@@ -149,60 +236,156 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_details: {
+        Row: {
+          created_at: string
+          filled_at: string
+          filled_by: string | null
+          id: string
+          proposal_id: string
+          resource_fields: Json | null
+          schedule_fields: Json | null
+          scope_fields: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filled_at?: string
+          filled_by?: string | null
+          id?: string
+          proposal_id: string
+          resource_fields?: Json | null
+          schedule_fields?: Json | null
+          scope_fields?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filled_at?: string
+          filled_by?: string | null
+          id?: string
+          proposal_id?: string
+          resource_fields?: Json | null
+          schedule_fields?: Json | null
+          scope_fields?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       proposals: {
         Row: {
           client_address: string | null
           client_email: string | null
+          client_id: string | null
           client_name: string | null
           created_at: string
           id: string
           issue_date: string | null
           items: Json
+          last_reminder_at: string | null
           notes: string | null
           number: string
+          reminder_count: number | null
           sections: Json
+          sent_at: string | null
+          status: string | null
+          template_id: string | null
           terms: string | null
           title: string | null
           total: number
           updated_at: string
           user_id: string
           valid_until: string | null
+          verified_by: string | null
         }
         Insert: {
           client_address?: string | null
           client_email?: string | null
+          client_id?: string | null
           client_name?: string | null
           created_at?: string
           id?: string
           issue_date?: string | null
           items?: Json
+          last_reminder_at?: string | null
           notes?: string | null
           number: string
+          reminder_count?: number | null
           sections?: Json
+          sent_at?: string | null
+          status?: string | null
+          template_id?: string | null
           terms?: string | null
           title?: string | null
           total?: number
           updated_at?: string
           user_id: string
           valid_until?: string | null
+          verified_by?: string | null
         }
         Update: {
           client_address?: string | null
           client_email?: string | null
+          client_id?: string | null
           client_name?: string | null
           created_at?: string
           id?: string
           issue_date?: string | null
           items?: Json
+          last_reminder_at?: string | null
           notes?: string | null
           number?: string
+          reminder_count?: number | null
           sections?: Json
+          sent_at?: string | null
+          status?: string | null
+          template_id?: string | null
           terms?: string | null
           title?: string | null
           total?: number
           updated_at?: string
           user_id?: string
           valid_until?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          created_at: string
+          id: string
+          merge_field_schema: Json | null
+          name: string
+          status: string | null
+          type: string
+          updated_at: string
+          user_id: string
+          version: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merge_field_schema?: Json | null
+          name: string
+          status?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+          version?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merge_field_schema?: Json | null
+          name?: string
+          status?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+          version?: number | null
         }
         Relationships: []
       }

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/lib/brand";
 import { MessageTimeline } from "@/components/workflow/MessageTimeline";
 import { CheckCircle, Clock, FileText, Send, UserCheck, CheckCircle2, FileEdit } from "lucide-react";
-import { verifyProposal, sendProposal, submitDetailing, authorizeInvoice } from "@/server/workflow";
+import { verifyProposal, sendProposal, submitDetailing, authorizeInvoice } from "@/actions/workflow";
 
 export const Route = createFileRoute("/_authenticated/proposals/$proposalId/panel")({
   component: ProposalPanel,

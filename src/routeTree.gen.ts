@@ -18,6 +18,7 @@ import { Route as AuthenticatedInvoiceRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as AuthenticatedProposalsProposalIdPanelRouteImport } from './routes/_authenticated/proposals.$proposalId.panel'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -63,6 +64,12 @@ const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProposalsProposalIdPanelRoute =
+  AuthenticatedProposalsProposalIdPanelRouteImport.update({
+    id: '/proposals/$proposalId/panel',
+    path: '/proposals/$proposalId/panel',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/invoice': typeof AuthenticatedInvoiceRoute
   '/proposal': typeof AuthenticatedProposalRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/proposals/$proposalId/panel': typeof AuthenticatedProposalsProposalIdPanelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/invoice': typeof AuthenticatedInvoiceRoute
   '/proposal': typeof AuthenticatedProposalRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/proposals/$proposalId/panel': typeof AuthenticatedProposalsProposalIdPanelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/_authenticated/invoice': typeof AuthenticatedInvoiceRoute
   '/_authenticated/proposal': typeof AuthenticatedProposalRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/proposals/$proposalId/panel': typeof AuthenticatedProposalsProposalIdPanelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/invoice'
     | '/proposal'
     | '/settings'
+    | '/proposals/$proposalId/panel'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/invoice'
     | '/proposal'
     | '/settings'
+    | '/proposals/$proposalId/panel'
   id:
     | '__root__'
     | '/'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
     | '/_authenticated/invoice'
     | '/_authenticated/proposal'
     | '/_authenticated/settings'
+    | '/_authenticated/proposals/$proposalId/panel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/proposals/$proposalId/panel': {
+      id: '/_authenticated/proposals/$proposalId/panel'
+      path: '/proposals/$proposalId/panel'
+      fullPath: '/proposals/$proposalId/panel'
+      preLoaderRoute: typeof AuthenticatedProposalsProposalIdPanelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -211,6 +231,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInvoiceRoute: typeof AuthenticatedInvoiceRoute
   AuthenticatedProposalRoute: typeof AuthenticatedProposalRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedProposalsProposalIdPanelRoute: typeof AuthenticatedProposalsProposalIdPanelRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -220,6 +241,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInvoiceRoute: AuthenticatedInvoiceRoute,
   AuthenticatedProposalRoute: AuthenticatedProposalRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedProposalsProposalIdPanelRoute:
+    AuthenticatedProposalsProposalIdPanelRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -233,3 +256,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
