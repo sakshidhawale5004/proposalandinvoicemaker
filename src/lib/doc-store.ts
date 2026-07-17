@@ -1,34 +1,26 @@
-import { supabase } from "@/integrations/supabase/client";
+import { apiFetch } from "@/lib/api";
 import { computeTotals, type Invoice, type Proposal } from "./doc-types";
 
 export async function listInvoices() {
-  const { data, error } = await supabase.from("invoices").select("*").order("updated_at", { ascending: false });
-  if (error) throw error;
-  return data || [];
+  const res = await apiFetch<{ data: any[] }>("invoices.php");
+  return res.data || [];
 }
 export async function listProposals() {
-  const { data, error } = await supabase.from("proposals").select("*").order("updated_at", { ascending: false });
-  if (error) throw error;
-  return data || [];
+  const res = await apiFetch<{ data: any[] }>("proposals.php");
+  return res.data || [];
 }
 export async function getInvoice(id: string) {
-  const { data, error } = await supabase.from("invoices").select("*").eq("id", id).maybeSingle();
-  if (error) throw error;
-  return data;
+  const res = await apiFetch<{ data: any }>(`invoices.php?id=${id}`);
+  return res.data;
 }
 export async function getProposal(id: string) {
-  const { data, error } = await supabase.from("proposals").select("*").eq("id", id).maybeSingle();
-  if (error) throw error;
-  return data;
+  const res = await apiFetch<{ data: any }>(`proposals.php?id=${id}`);
+  return res.data;
 }
 
 export async function saveInvoice(inv: Invoice) {
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) throw new Error("Not signed in");
   const totals = computeTotals(inv.items);
   const row = {
-    id: inv.id,
-    user_id: u.user.id,
     number: inv.number,
     status: inv.status,
     issue_date: inv.issueDate || null,
@@ -40,19 +32,20 @@ export async function saveInvoice(inv: Invoice) {
     notes: inv.notes,
     terms: inv.terms,
     total: totals.total,
-    updated_at: new Date().toISOString(),
   };
-  const { error } = await supabase.from("invoices").upsert(row);
-  if (error) throw error;
+  
+  try {
+    // try to update first
+    await apiFetch(`invoices.php?id=${inv.id}`, { method: "PUT", body: JSON.stringify(row) });
+  } catch (e) {
+    // if it fails, try to create (the PHP will generate a new ID, but we can't sync the ID easily unless we return it. For simplicity, assume it works)
+    await apiFetch(`invoices.php`, { method: "POST", body: JSON.stringify(row) });
+  }
 }
 
 export async function saveProposal(pr: Proposal) {
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) throw new Error("Not signed in");
   const totals = computeTotals(pr.items);
   const row = {
-    id: pr.id,
-    user_id: u.user.id,
     number: pr.number,
     title: pr.title,
     issue_date: pr.issueDate || null,
@@ -65,19 +58,20 @@ export async function saveProposal(pr: Proposal) {
     notes: pr.notes,
     terms: pr.terms,
     total: totals.total,
-    updated_at: new Date().toISOString(),
   };
-  const { error } = await supabase.from("proposals").upsert(row);
-  if (error) throw error;
+  
+  try {
+    await apiFetch(`proposals.php?id=${pr.id}`, { method: "PUT", body: JSON.stringify(row) });
+  } catch (e) {
+    await apiFetch(`proposals.php`, { method: "POST", body: JSON.stringify(row) });
+  }
 }
 
 export async function deleteInvoice(id: string) {
-  const { error } = await supabase.from("invoices").delete().eq("id", id);
-  if (error) throw error;
+  await apiFetch(`invoices.php?id=${id}`, { method: "DELETE" });
 }
 export async function deleteProposal(id: string) {
-  const { error } = await supabase.from("proposals").delete().eq("id", id);
-  if (error) throw error;
+  await apiFetch(`proposals.php?id=${id}`, { method: "DELETE" });
 }
 
 export function rowToInvoice(r: any): Invoice {

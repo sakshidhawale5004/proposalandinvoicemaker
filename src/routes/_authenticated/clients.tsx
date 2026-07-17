@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Nav } from "@/components/nav";
-import { supabase } from "@/integrations/supabase/client";
+import { apiFetch } from "@/lib/api";
 import { useBrand } from "@/lib/brand";
 import { useState } from "react";
 import { Plus, Search, Trash2, Save, Users, Mail, Phone, MapPin } from "lucide-react";
@@ -18,9 +18,8 @@ type Client = {
 };
 
 async function listClients() {
-  const { data, error } = await supabase.from("clients").select("*").order("name");
-  if (error) throw error;
-  return (data || []) as Client[];
+  const res = await apiFetch<{ data: Client[] }>("clients.php");
+  return res.data || [];
 }
 
 function ClientsPage() {
@@ -34,11 +33,7 @@ function ClientsPage() {
 
   const save = async () => {
     if (!editing?.name) return;
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
     const row = {
-      id: editing.id || undefined,
-      user_id: u.user.id,
       name: editing.name,
       email: editing.email || null,
       phone: editing.phone || null,
@@ -46,14 +41,29 @@ function ClientsPage() {
       gstin: editing.gstin || null,
       notes: editing.notes || null,
     };
-    await supabase.from("clients").upsert(row);
-    qc.invalidateQueries({ queryKey: ["clients"] });
-    setEditing(null);
+    
+    try {
+      if (editing.id) {
+        await apiFetch(`clients.php?id=${editing.id}`, { method: "PUT", body: JSON.stringify(row) });
+      } else {
+        await apiFetch(`clients.php`, { method: "POST", body: JSON.stringify(row) });
+      }
+      qc.invalidateQueries({ queryKey: ["clients"] });
+      setEditing(null);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to save client");
+    }
   };
   const remove = async (id: string) => {
     if (!confirm("Delete this client?")) return;
-    await supabase.from("clients").delete().eq("id", id);
-    qc.invalidateQueries({ queryKey: ["clients"] });
+    try {
+      await apiFetch(`clients.php?id=${id}`, { method: "DELETE" });
+      qc.invalidateQueries({ queryKey: ["clients"] });
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete client");
+    }
   };
 
   return (

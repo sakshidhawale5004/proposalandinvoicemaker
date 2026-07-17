@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useBrand } from "@/lib/brand";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiFetch } from "@/lib/api";
 import { LogOut, User } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -14,15 +14,15 @@ export function Nav() {
   const qc = useQueryClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setEmail(s?.user?.email ?? null));
-    return () => sub.subscription.unsubscribe();
+    apiFetch<{ user: { email: string } }>("auth.php?action=session")
+      .then((data) => setEmail(data.user?.email ?? null))
+      .catch(() => setEmail(null));
   }, []);
 
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();
-    await supabase.auth.signOut();
+    await apiFetch("auth.php?action=logout", { method: "POST" });
     router.invalidate();
     navigate({ to: "/auth", replace: true });
   };

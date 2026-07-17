@@ -103,17 +103,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-        if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-        router.invalidate();
-        if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-      });
-      if (cancelled) sub.subscription.unsubscribe();
-    })();
-    return () => { cancelled = true; };
+    // We removed Supabase auth listener. 
+    // In a full implementation, you could poll apiFetch("auth.php?action=session") 
+    // or rely on React Query / router invalidation upon login/logout actions.
   }, [router, queryClient]);
   return (
     <QueryClientProvider client={queryClient}>

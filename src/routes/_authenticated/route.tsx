@@ -1,12 +1,16 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { apiFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
-    return { user: data.user };
+    try {
+      const data = await apiFetch<{ user: any }>("auth.php?action=session");
+      if (!data?.user) throw new Error("Not logged in");
+      return { user: data.user };
+    } catch (e) {
+      throw redirect({ to: "/auth" });
+    }
   },
   component: () => <Outlet />,
 });

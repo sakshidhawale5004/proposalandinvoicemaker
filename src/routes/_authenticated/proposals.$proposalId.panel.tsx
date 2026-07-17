@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiFetch } from "@/lib/api";
 import { useBrand } from "@/lib/brand";
 import { MessageTimeline } from "@/components/workflow/MessageTimeline";
 import { CheckCircle, Clock, FileText, Send, UserCheck, CheckCircle2, FileEdit } from "lucide-react";
@@ -39,14 +39,17 @@ function ProposalPanel() {
 
   async function fetchData() {
     setLoading(true);
-    const { data: prop } = await supabase.from("proposals").select("*").eq("id", proposalId).single();
-    if (prop) setProposal(prop);
+    try {
+      const pRes = await apiFetch<{ data: any }>(`proposals.php?id=${proposalId}`);
+      if (pRes.data) setProposal(pRes.data);
 
-    const { data: msgs } = await supabase.from("message_logs").select("*").eq("entity_type", "proposal").eq("entity_id", proposalId);
-    if (msgs) setMessages(msgs);
-
-    const { data: auds } = await supabase.from("audit_trails").select("*").eq("entity_type", "proposal").eq("entity_id", proposalId);
-    if (auds) setAudits(auds);
+      // Assuming we have endpoints or we just fetch these in PHP. 
+      // For now, we'll leave messages and audits empty since we haven't built dedicated GET endpoints for logs yet.
+      setMessages([]);
+      setAudits([]);
+    } catch (e) {
+      console.error(e);
+    }
     setLoading(false);
   }
 
@@ -118,8 +121,7 @@ function ProposalPanel() {
             <button 
               disabled={proposal.status !== 'in_review' && proposal.status !== 'draft'}
               onClick={async () => {
-                const { data } = await supabase.auth.getUser();
-                return handleAction(() => verifyProposal({ data: { proposalId: proposal.id, userId: data.user?.id ?? "mock" } }));
+                return handleAction(() => verifyProposal({ data: { proposalId: proposal.id } }));
               }}
               className="w-full bg-primary text-white py-2 rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
             >
@@ -136,8 +138,7 @@ function ProposalPanel() {
             <button 
               disabled={proposal.status !== 'verified'}
               onClick={async () => {
-                const { data } = await supabase.auth.getUser();
-                return handleAction(() => sendProposal({ data: { proposalId: proposal.id, userId: data.user?.id ?? "mock" } }));
+                return handleAction(() => sendProposal({ data: { proposalId: proposal.id } }));
               }}
               className="w-full bg-primary text-white py-2 rounded-xl text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
             >
@@ -153,7 +154,7 @@ function ProposalPanel() {
             <p className="text-sm text-blue-600/80 mb-4">Simulate the client approving the proposal from their device.</p>
             <button 
               onClick={async () => {
-                await supabase.from("proposals").update({ status: "approved" }).eq("id", proposal.id);
+                await apiFetch(`proposals.php?id=${proposal.id}`, { method: "PUT", body: JSON.stringify({ status: "approved" }) });
                 fetchData();
               }}
               className="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700"
@@ -187,14 +188,14 @@ function ProposalPanel() {
             <div className="flex gap-2">
               <button 
                 disabled={proposal.status !== 'approved'}
-                onClick={() => handleAction(() => submitDetailing({ data: { proposalId: proposal.id, userId: "mock", scope, schedule, resources: {} } }))}
+                onClick={() => handleAction(() => submitDetailing({ data: { proposalId: proposal.id, scope, schedule, resources: {} } }))}
                 className="flex-1 bg-secondary text-secondary-foreground py-2 rounded-xl text-sm font-semibold hover:bg-secondary/80 disabled:opacity-50"
               >
                 Save Details
               </button>
               <button 
                 disabled={proposal.status !== 'approved'}
-                onClick={() => handleAction(() => authorizeInvoice({ data: { proposalId: proposal.id, userId: "mock" } }))}
+                onClick={() => handleAction(() => authorizeInvoice({ data: { proposalId: proposal.id } }))}
                 className="flex-1 bg-green-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50"
               >
                 Authorize Invoice

@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { apiFetch } from "@/lib/api";
 import { useBrand } from "@/lib/brand";
 import { Mail, Lock, Loader2 } from "lucide-react";
 
@@ -27,9 +26,12 @@ function AuthPage() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/dashboard", replace: true });
-    });
+    // Check if user is logged in
+    apiFetch<{ user: any }>("auth.php?action=session")
+      .then(({ user }) => {
+        if (user) navigate({ to: "/dashboard", replace: true });
+      })
+      .catch(() => { /* not logged in */ });
   }, [navigate]);
 
   const submit = async (e: React.FormEvent) => {
@@ -38,15 +40,16 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email, password: pw,
-          options: { emailRedirectTo: window.location.origin + "/dashboard", data: { full_name: name || undefined } },
+        await apiFetch("auth.php?action=register", {
+          method: "POST",
+          body: JSON.stringify({ email, password: pw, name })
         });
-        if (error) throw error;
         navigate({ to: "/dashboard", replace: true });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
-        if (error) throw error;
+        await apiFetch("auth.php?action=login", {
+          method: "POST",
+          body: JSON.stringify({ email, password: pw })
+        });
         navigate({ to: "/dashboard", replace: true });
       }
     } catch (e: any) {
@@ -57,14 +60,7 @@ function AuthPage() {
   };
 
   const google = async () => {
-    setErr(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin + "/dashboard"
-      }
-    });
-    if (error) setErr(error.message ?? "Google sign-in failed");
+    setErr("Google login requires manual PHP setup. Please use Email/Password for now.");
   };
 
   return (

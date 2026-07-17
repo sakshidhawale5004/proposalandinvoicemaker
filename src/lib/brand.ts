@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode, createElement } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 export type BrandSettings = {
   companyName: string;
@@ -65,37 +64,8 @@ export function BrandProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
 
-  // Sync with cloud when signed in
-  useEffect(() => {
-    const load = async (uid: string) => {
-      const { data } = await supabase.from("brand_settings").select("settings").eq("user_id", uid).maybeSingle();
-      if (data?.settings) {
-        setBrand({ ...defaultBrand, ...(data.settings as Partial<BrandSettings>) });
-      }
-    };
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) { userIdRef.current = data.user.id; load(data.user.id); }
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        userIdRef.current = session.user.id;
-        load(session.user.id);
-      } else if (event === "SIGNED_OUT") {
-        userIdRef.current = null;
-      }
-    });
-    return () => { sub.subscription.unsubscribe(); };
-  }, []);
-
   const persist = (next: BrandSettings) => {
     try { localStorage.setItem(KEY, JSON.stringify(next)); } catch {}
-    if (userIdRef.current) {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      const uid = userIdRef.current;
-      saveTimer.current = setTimeout(() => {
-        supabase.from("brand_settings").upsert({ user_id: uid, settings: next as any, updated_at: new Date().toISOString() });
-      }, 600);
-    }
   };
 
   const update = (patch: Partial<BrandSettings>) => {
